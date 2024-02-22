@@ -1,13 +1,18 @@
 #[derive(Debug)]
 struct Node {
     elem: i32,
-    next: List,
+    next: Link,
 }
 
 #[derive(Debug)]
-enum List {
+enum Link {
     Empty,
     More(Box<Node>),
+}
+
+#[derive(Debug)]
+struct List {
+    head: Link,
 }
 
 fn main() {
@@ -21,15 +26,17 @@ fn main() {
 
     let node2 = Node {
         elem: 2,
-        next: List::Empty,
+        next: Link::Empty,
     };
 
     let node1 = Node {
         elem: 1,
-        next: List::More(Box::new(node2)),
+        next: Link::More(Box::new(node2)),
     };
 
-    let list = Box::new(node1);
+    let list = List {
+        head: Link::More(Box::new(node1)),
+    };
 
     println!("{:?}", list);
 }
