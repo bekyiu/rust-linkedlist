@@ -27,6 +27,14 @@ struct Node<T> {
 
 所以我们修改了Link<T>的定义
 从Option<Box<Node<T>>> 改到 Option<Rc<Node<T>>>
+
+需要注意的是 Rc<T> 是指向底层数据的不可变的引用，因此你无法通过它来修改数据
+这也符合 Rust 的借用规则：要么存在多个不可变借用，要么只能存在一个可变借用。
+
+let mut r1 = Rc::new(10);
+*r1 = 30; // Rc没有实现DerefMut trait, 不能这样干
+
+所以我们这个链表是一个不可变的链表, 节点一旦创建后, elem和next都不能再改变了
  */
 type Link<T> = Option<Rc<Node<T>>>;
 
