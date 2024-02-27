@@ -59,28 +59,77 @@ impl<T> List<T> {
             })
         }
     }
+
+    fn peek_left(&self) -> Option<&T> {
+        let head = self.head.as_ref();
+        head.map(|node| {
+            &node.elem
+        })
+    }
 }
 
+// 没有实现IntoIter和IterMut是因为:
+// 我们用了rc, 所有权会被共享, rc指向的东西不可变
+struct Iter<'a, T> {
+    // 保存一个引用, 指向当前要被返回的node
+    next: Option<&'a Node<T>>,
+}
+
+impl<T> List<T> {
+    fn iter(&self) -> Iter<T> {
+        Iter {
+            next: self.head.as_deref(),
+        }
+    }
+}
+
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next.map(|node| {
+            self.next = node.next.as_deref();
+            &node.elem
+        })
+    }
+}
 
 #[cfg(test)]
 mod test {
     use super::List;
 
     #[test]
-    fn test_iter_mut() {}
+    fn test_iter() {
+        let list = List::new();
+        let list = list.push_left(1).push_left(2).push_left(3);
+        let mut it = list.iter();
+        assert_eq!(it.next(), Some(&3));
+        assert_eq!(it.next(), Some(&2));
+        assert_eq!(it.next(), Some(&1));
+        assert_eq!(it.next(), None);
+    }
+
 
     #[test]
-    fn test_iter() {}
+    fn basics() {
+        let list = List::new();
+        assert_eq!(list.peek_left(), None);
 
-    #[test]
-    fn test_into_iter() {}
+        let list = list.push_left(1).push_left(2).push_left(3);
+        assert_eq!(list.peek_left(), Some(&3));
 
-    #[test]
-    fn test_peek() {}
+        let list = list.pop_left();
+        assert_eq!(list.peek_left(), Some(&2));
 
-    // 如果是默认的Drop实现, 这个测试是无法通过的
-    #[test]
-    fn long_list() {}
+        let list = list.pop_left();
+        assert_eq!(list.peek_left(), Some(&1));
+
+        let list = list.pop_left();
+        assert_eq!(list.peek_left(), None);
+
+        // Make sure empty tail works
+        let list = list.pop_left();
+        assert_eq!(list.peek_left(), None);
+    }
 }
 
 fn main() {}
