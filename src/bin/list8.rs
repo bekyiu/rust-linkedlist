@@ -93,6 +93,21 @@ impl<'a, T> Iterator for Iter<'a, T> {
     }
 }
 
+impl<T> Drop for List<T> {
+    fn drop(&mut self) {
+        let mut head = self.head.take();
+        // 一直 drop 到第一个被其它链表所引用的节点
+        while let Some(node) = head {
+            // 判断当前的 Rc 是否只有一个强引用，若是，则返回 Rc 持有的值，否则返回一个错误
+            if let Ok(mut node) = Rc::try_unwrap(node) {
+                head = node.next.take();
+            } else {
+                break;
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::List;
